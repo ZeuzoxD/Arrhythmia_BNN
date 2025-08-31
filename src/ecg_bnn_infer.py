@@ -6,12 +6,6 @@ from pathlib import Path
 
 LABELS = ['N', 'S', 'V', 'F', 'Q']
 
-
-def binarize_int8(x):
-    s = torch.sign(x)
-    s[s == 0] = 1.0
-    return s.to(torch.int8)
-
 def pad_1d(x, pad, val=1):
 
     if pad == 0: return x
