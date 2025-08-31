@@ -154,7 +154,7 @@ def main():
         gt = int(Path(f).parent.name.split()[0]) - 1
         idx, lbl, _ = model.predict(sig)
         if idx == gt: correct += 1
-        print(f"{i}: {Path(f).name}: GT={gt} Pred={lbl} {'✓' if correct else '✗'}")
+        print(f"{i}: {Path(f).name}: GT={LABELS[gt]} Pred={lbl} {'✓' if correct else '✗'}")
 
     print(f"Accuracy: {correct/len(files)*100:.2f}% ({correct}/{len(files)})")
 
