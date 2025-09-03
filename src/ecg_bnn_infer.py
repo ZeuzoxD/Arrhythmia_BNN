@@ -7,17 +7,17 @@ from pathlib import Path
 LABELS = ['N', 'S', 'V', 'F', 'Q']
 
 def pad_1d(x, pad, val=1):
-
     if pad == 0: return x
     B, C, L = x.shape
-
     left = torch.full((B, C, pad), val, dtype=x.dtype, device=x.device)
-
     right = torch.full((B, C, pad), val, dtype=x.dtype, device=x.device)
     return torch.cat([left, x, right], dim=2)
 
 def maxpool1d_int(x, k=7, s=2):
     return x.unfold(2, k, s).amax(dim=3)
+
+def binarize_to_bits(x):
+    return (x > 0).to(torch.uint8)
 
 def binary_conv1d(x, w, stride=1, padding=0):
     B, Cin, L = x.shape
@@ -25,12 +25,20 @@ def binary_conv1d(x, w, stride=1, padding=0):
     if padding > 0:
         x = pad_1d(x, padding, val=1)
     x_unf = x.unfold(2, K, stride)          # [B,Cin,Lout,K]
+    B, Cin, Lout, K = x_unf.shape
 
-    Lout = x_unf.size(2)
-    x_flat = x_unf.permute(0,2,1,3).reshape(B*Lout, Cin*K).to(torch.int32)
-    w_flat = w.reshape(Cout, Cin*K).to(torch.int32)
-    out = (x_flat @ w_flat.t()).view(B,Lout,Cout).permute(0,2,1).contiguous()
-    return out
+    x_bin = binarize_to_bits(x_unf)
+    w_bin = binarize_to_bits(w).unsqueeze(0)
+
+    x_bin = x_bin.permute(0, 2, 1, 3)
+    x_bin = x_bin.unsqueeze(1)
+    w_bin = w_bin.unsqueeze(2)
+
+    xnor = (x_bin == w_bin)
+    popcount = xnor.sum(dim=(-1, -2), dtype=torch.int32)
+
+    out = 2 * popcount - (Cin * K)
+    return out.to(torch.int32)
 
 def threshold_activation(x, params, pool_k=7, pool_s=2):
     dp, dm, a_sign, scale = params
