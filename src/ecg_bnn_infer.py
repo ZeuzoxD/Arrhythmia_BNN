@@ -108,7 +108,7 @@ class ECG_BNN:
     def forward(self, sig):
         x = self.preprocess(sig)
         cfg = self.blocks[0]
-        x = F.pad(x, (cfg[4], cfg[4]), value=1.0) if cfg[4] > 0 else x
+        x = F.pad(x, (cfg[4], cfg[4]), value=1.0)
         x = F.conv1d(x, self.weights[0].float(), stride=cfg[3])
         x = threshold_activation(x, self.thresholds[0], cfg[5], cfg[6])
 
