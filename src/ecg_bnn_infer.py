@@ -24,7 +24,7 @@ def binary_conv1d(x, w, stride=1, padding=0):
     Cout, _, K = w.shape
     if padding > 0:
         x = pad_1d(x, padding, val=1)
-    x_unf = x.unfold(2, K, stride)          # [B,Cin,Lout,K]
+    x_unf = x.unfold(2, K, stride) 
     B, Cin, Lout, K = x_unf.shape
 
     x_bin = binarize_to_bits(x_unf)
